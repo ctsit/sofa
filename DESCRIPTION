@@ -1,0 +1,29 @@
+Package: sofa
+Type: Package
+Title: Calculate Sequential Organ Failure Assessment (SOFA) Score
+Version: 0.1.0
+Authors@R: c(
+  person("Laurence", "James-Woodley", email = "lawjames1@ufl.edu", role = c("aut", "cre")),
+  person("Philip", "Chase", email = "pbc@ufl.edu", role = "aut")
+  )
+Description: Provides data transformation functions to calculate the SOFA score.
+License: Apache License (>= 2.0)
+Encoding: UTF-8
+LazyData: true
+Imports:
+    dplyr,
+    lubridate,
+    magrittr,
+    readr,
+    rlang,
+    stringr,
+    tidyr,
+    tibble
+Suggests:
+    devtools,
+    here,
+    janitor,
+    purrr,
+    readxl
+RoxygenNote: 7.2.2
+Roxygen: list(markdown = TRUE)
