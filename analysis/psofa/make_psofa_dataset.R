@@ -8,9 +8,8 @@ library(here)
 cohort <- "nicu"
 
 categorized_respiratory_devices <- readxl::read_excel(here(
-    "output",
-    "psofa",
-    "categorized_respiratory_devices_2021-09-24-JLW.xlsx"
+    "input",
+    "psofa_categorized_respiratory_devices.xlsx"
   ),
   sheet = 4) %>%
   filter(on_resp_support == 0)
