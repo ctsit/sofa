@@ -1,0 +1,58 @@
+---
+title: "Data Summary"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(summarytools)
+library(janitor)
+library(htmltools)
+library(here)
+```
+
+```{r}
+# identify cohort of interest. e.g picu/pcicu/nicu
+cohort <- "picu"
+```
+
+## {.tabset}
+
+### Child Encounter
+```{r child_encounter}
+child_encounter <- read_csv(here("data", cohort, "encounter.csv")) %>%
+  clean_names()
+
+includeHTML(view(dfSummary(child_encounter, graph.col = FALSE)))
+
+```
+
+### Labs
+```{r labs}
+labs <- read_csv(here("data", cohort, "labs.csv")) %>%
+  clean_names() 
+
+includeHTML(view(dfSummary(labs, graph.col = FALSE)))
+```
+
+### Medications
+```{r medications}
+medications <- read_csv(here("data", cohort, "medications.csv")) %>%
+  clean_names()
+
+includeHTML(view(dfSummary(medications, graph.col = FALSE)))
+```
+
+### Flowsheets
+```{r flowsheets}
+flowsheets <- read_csv(here("data", cohort, "flowsheets.csv")) %>%
+  clean_names()
+
+includeHTML(view(dfSummary(flowsheets, graph.col = FALSE)))
+```
+
