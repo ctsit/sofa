@@ -1,22 +1,22 @@
 library(tidyverse)
 files_to_rename <- tribble(
   ~source, ~target,
-  "data/picu/PICU-child_encounter_data.csv", "data/picu/encounter.csv",
-  "data/picu/PICU-child_flowsheets.csv", "data/picu/flowsheets.csv",
-  "data/picu/PICU-child_labs.csv", "data/picu/labs.csv",
-  "data/picu/PICU-child_medications.csv", "data/picu/medications.csv",
-  "data/picu/Child_Glasgow_PICU.csv", "data/picu/glasgow.csv",
+  "input/picu/PICU-child_encounter_input.csv", "input/picu/encounter.csv",
+  "input/picu/PICU-child_flowsheets.csv", "input/picu/flowsheets.csv",
+  "input/picu/PICU-child_labs.csv", "input/picu/labs.csv",
+  "input/picu/PICU-child_medications.csv", "input/picu/medications.csv",
+  "input/picu/Child_Glasgow_PICU.csv", "input/picu/glasgow.csv",
 
-  "data/nicu/child_encounter_data.csv", "data/nicu/encounter.csv",
-  "data/nicu/child_flowsheets.csv", "data/nicu/flowsheets.csv",
-  "data/nicu/child_labs.csv", "data/nicu/labs.csv",
-  "data/nicu/child_medications.csv", "data/nicu/medications.csv",
+  "input/nicu/child_encounter_input.csv", "input/nicu/encounter.csv",
+  "input/nicu/child_flowsheets.csv", "input/nicu/flowsheets.csv",
+  "input/nicu/child_labs.csv", "input/nicu/labs.csv",
+  "input/nicu/child_medications.csv", "input/nicu/medications.csv",
 
-  "data/pcicu/PCICU-child_encounter_data.csv", "data/pcicu/encounter.csv",
-  "data/pcicu/PCICU-child_flowsheets.csv", "data/pcicu/flowsheets.csv",
-  "data/pcicu/PCICU-child_labs.csv", "data/pcicu/labs.csv",
-  "data/pcicu/PCICU-child_medications.csv", "data/pcicu/medications.csv",
-  "data/pcicu/Child_Glasgow_PICU.csv", "data/pcicu/glasgow.csv"
+  "input/pcicu/PCICU-child_encounter_input.csv", "input/pcicu/encounter.csv",
+  "input/pcicu/PCICU-child_flowsheets.csv", "input/pcicu/flowsheets.csv",
+  "input/pcicu/PCICU-child_labs.csv", "input/pcicu/labs.csv",
+  "input/pcicu/PCICU-child_medications.csv", "input/pcicu/medications.csv",
+  "input/pcicu/Child_Glasgow_PICU.csv", "input/pcicu/glasgow.csv"
 )
 
 rename_these <- files_to_rename %>%
