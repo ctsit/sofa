@@ -6,9 +6,9 @@
 ^input/.*$
 ^analysis/.*$
 ^tests\.bats/.*$
-^run_tests.sh$
+.sh$
 ^rename_input_files.R$
 ^VERSION$
-^images/.*$
 .pdf$
 .md$
+
