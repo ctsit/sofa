@@ -48,7 +48,7 @@ To restore the project library locally call `renv::restore()`.
 Addtionally, see [collaborating with renv](https://rstudio.github.io/renv/articles/collaborating.html) for instructions on how to collaborate with renv.
 
 ### Data
-The data was acquired from the University of Florida Integrated Data Repository (IDR) and is not accessible for public use due to PHI restrictions. For developers that have been granted access to this data please contact [James Wynn](james.wynn@peds.ufl.edu), [Philip Chase](pbc@ufl.edu) or [Laurence James-Woodley](lawjames1@ufl.edu) for access to the `sofa_inputs_and_outputs` folder. Once access has been granted copy the contents of the input folder to [./input](./input) to allow the analytic tools to run without modification.
+The data is not accessible for public use due to PHI restrictions. For developers that have been granted access to this data please contact [James Wynn](james.wynn@peds.ufl.edu), [Philip Chase](pbc@ufl.edu) or [Laurence James-Woodley](lawjames1@ufl.edu) for access to the `sofa_inputs_and_outputs` folder. Once access has been granted copy the contents of the input folder to [./input](./input) to allow the analytic tools to run without modification.
 
 ### Package Build
 Build the `sofa` package included in this repo. either by running R CMD INSTALL --preclean --no-multiarch --with-keep.source . at the root of the repo or using RStudio's Build features.
