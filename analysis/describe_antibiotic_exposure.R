@@ -1,7 +1,10 @@
+# TODO: update abxs from email
+
 library(tidyverse)
 library(janitor)
 library(lubridate)
 library(here)
+
 
 # identify cohort of interest. e.g picu/pcicu/nicu
 cohort <- "nicu"
@@ -86,8 +89,14 @@ antibacterial_file <- filtered_medications %>%
       pmax(lag_pk_due_time, lag_2_pk_due_time, pk_due_time, na.rm = TRUE),
       pk_due_time
     ),
-    pk_coverage_plus48hrs = pk_coverage + hours(48)
+    pk_coverage_plus48hrs = pk_coverage + hours(48),
+    time_diff = difftime(pk_coverage_plus48hrs, lag(pk_coverage_plus48hrs), units = "hours"),
+    new_episode = case_when(
+      time_diff >= 48 ~ 1,
+      is.na(time_diff) ~ 1,
+      TRUE ~ 0
+    ),
+    episode_number = cumsum(new_episode)
   ) %>%
-  select(!matches("lag_"))
-
+  select(!c(matches("lag_"),time_diff, new_episode))
 
