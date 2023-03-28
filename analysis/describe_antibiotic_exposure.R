@@ -72,6 +72,7 @@ antibacterial_file <- filtered_medications %>%
     child_mrn_uf,
     antibiotic,
     med_order_desc,
+    med_order_datetime,
     take_datetime,
     starts_with("med_order_freq_desc")
   ) %>%
@@ -117,7 +118,20 @@ days_of_antibiotic_exposure_per_episode <- antibacterial_file %>%
     abx_exposure_days_method_2 = (last_date_method_2 - first_date_method_2) + 1
   )
 
-antibiotics_per_episode <- antibacterial_file %>%
+# TODO good name for this column
+time_between_take_and_med_order <- antibacterial_file %>%
+  select(child_mrn_uf,
+         antibiotic,
+         episode_number,
+         take_datetime,
+         med_order_datetime) %>%
+  distinct(child_mrn_uf, antibiotic, episode_number, .keep_all = TRUE) %>%
+  group_by(child_mrn_uf, episode_number) %>%
+  slice_min(take_datetime, with_ties = FALSE) %>%
+  mutate(ordered_to_given_time_hour = as.numeric((round(difftime(take_datetime, med_order_datetime, units = "hours"), 2)))) %>%
+  select(-antibiotic)
+
+ordered_antibiotics_per_episode <- antibacterial_file %>%
   select(child_mrn_uf, abx = antibiotic, episode_number) %>%
   distinct() %>%
   group_by(child_mrn_uf, episode_number) %>%
@@ -127,6 +141,17 @@ antibiotics_per_episode <- antibacterial_file %>%
               names_glue = "{.value}_{antibiotic_count}",
               values_from = abx) %>%
   arrange(child_mrn_uf, episode_number)
+
+unordered_antibiotics_per_episode <- antibacterial_file %>%
+  select(child_mrn_uf, abx = antibiotic, episode_number) %>%
+  distinct() %>%
+  group_by(child_mrn_uf, episode_number) %>%
+  mutate(antibiotic_count = row_number()) %>%
+  pivot_wider(names_from = antibiotic_count,
+              names_glue = "{.value}_{antibiotic_count}",
+              values_from = abx) %>%
+  arrange(child_mrn_uf, episode_number) %>%
+  left_join(time_between_take_and_med_order, by = c("child_mrn_uf", "episode_number"))
 
 abx_exposure_by_episode <- days_of_antibiotic_exposure_per_episode %>%
   left_join(antibiotics_per_episode, by = c("child_mrn_uf", "episode_number"))
