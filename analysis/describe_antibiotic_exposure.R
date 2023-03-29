@@ -26,6 +26,16 @@ read_child_encounter <- read_csv(here("input", cohort, "encounter.csv")) %>%
 read_medications <- read_csv(here("input", cohort, "medications.csv")) %>%
   clean_names()
 
+encounters <- read_child_encounter %>%
+  select(child_mrn_uf, admit_datetime, dischg_datetime, dischg_disposition) %>%
+  filter(!is.na(admit_datetime)) %>%
+  group_by(child_mrn_uf) %>%
+  mutate(encounter_number = row_number(),
+         admit_datetime = as_date(admit_datetime),
+         dischg_datetime = as_date(dischg_datetime)) %>%
+  group_by(child_mrn_uf, encounter_number) %>%
+  expand(encounter_date = seq(admit_datetime, dischg_datetime, by = "day"))
+
 filtered_medications <- read_medications %>%
   select(
     child_mrn_uf,
@@ -45,9 +55,9 @@ filtered_medications <- read_medications %>%
       str_detect(mar_action, "given") &
       str_detect(med_order_route, "intravenous") &
       (
-        str_detect(med_order_desc, drug_name_types$antibacterial$drug_name)
-        # str_detect(med_order_desc, drug_name_types$antifungal$drug_name) |
-        # str_detect(med_order_desc, drug_name_types$antiviral$drug_name)
+        str_detect(med_order_desc, drug_name_types$antibacterial$drug_name) |
+        str_detect(med_order_desc, drug_name_types$antifungal$drug_name) |
+        str_detect(med_order_desc, drug_name_types$antiviral$drug_name)
       )
   ) %>%
   mutate(
@@ -66,12 +76,13 @@ shortest_frequency_for_a_drug <- filtered_medications %>%
   select(antibiotic, shortest_med_order_freq_desc_hour = med_order_freq_desc_hour) %>%
   slice_min(shortest_med_order_freq_desc_hour, with_ties = FALSE)
 
-antibacterial_file <- filtered_medications %>%
+abx_data <- filtered_medications %>%
   filter(str_detect(med_order_desc, drug_name_types$antibacterial$drug_name)) %>%
   select(
     child_mrn_uf,
     antibiotic,
     med_order_desc,
+    total_dose_character,
     med_order_datetime,
     take_datetime,
     starts_with("med_order_freq_desc")
@@ -101,7 +112,23 @@ antibacterial_file <- filtered_medications %>%
   ) %>%
   select(!c(matches("lag_"),time_diff, new_episode))
 
-days_of_antibiotic_exposure_per_episode <- antibacterial_file %>%
+abx_with_encounter_and_episode <- encounters %>%
+  left_join(
+    abx_data %>%
+      mutate(take_date = as_date(take_datetime)),
+    by = c("child_mrn_uf", "encounter_date" = "take_date")
+  ) %>%
+  ungroup() %>%
+  filter(!is.na(antibiotic))
+
+# episode summaries -------------------------------------------------------
+
+
+total_abx_dose_per_episode <- abx_with_encounter_and_episode %>%
+  group_by(child_mrn_uf, antibiotic, episode_number) %>%
+  summarise(total_dose_sum = sum(total_dose_character))
+
+days_of_abx_exposure_per_episode <- abx_with_encounter_and_episode %>%
   select(child_mrn_uf, take_datetime, pk_coverage, episode_number) %>%
   mutate(take_datetime = as_date(take_datetime),
          pk_coverage = as_date(pk_coverage)) %>%
@@ -118,8 +145,7 @@ days_of_antibiotic_exposure_per_episode <- antibacterial_file %>%
     abx_exposure_days_method_2 = (last_date_method_2 - first_date_method_2) + 1
   )
 
-# TODO good name for this column
-time_between_take_and_med_order <- antibacterial_file %>%
+time_between_take_and_med_order <- abx_with_encounter_and_episode %>%
   select(child_mrn_uf,
          antibiotic,
          episode_number,
@@ -128,21 +154,10 @@ time_between_take_and_med_order <- antibacterial_file %>%
   distinct(child_mrn_uf, antibiotic, episode_number, .keep_all = TRUE) %>%
   group_by(child_mrn_uf, episode_number) %>%
   slice_min(take_datetime, with_ties = FALSE) %>%
-  mutate(ordered_to_given_time_hour = as.numeric((round(difftime(take_datetime, med_order_datetime, units = "hours"), 2)))) %>%
+  mutate(abx_1_turnaround_time_hour = as.numeric((round(difftime(take_datetime, med_order_datetime, units = "hours"), 2)))) %>%
   select(-antibiotic)
 
-ordered_antibiotics_per_episode <- antibacterial_file %>%
-  select(child_mrn_uf, abx = antibiotic, episode_number) %>%
-  distinct() %>%
-  group_by(child_mrn_uf, episode_number) %>%
-  arrange(abx) %>%
-  mutate(antibiotic_count = row_number()) %>%
-  pivot_wider(names_from = antibiotic_count,
-              names_glue = "{.value}_{antibiotic_count}",
-              values_from = abx) %>%
-  arrange(child_mrn_uf, episode_number)
-
-unordered_antibiotics_per_episode <- antibacterial_file %>%
+unordered_abx_per_episode <- abx_with_encounter_and_episode %>%
   select(child_mrn_uf, abx = antibiotic, episode_number) %>%
   distinct() %>%
   group_by(child_mrn_uf, episode_number) %>%
@@ -153,40 +168,37 @@ unordered_antibiotics_per_episode <- antibacterial_file %>%
   arrange(child_mrn_uf, episode_number) %>%
   left_join(time_between_take_and_med_order, by = c("child_mrn_uf", "episode_number"))
 
-antibiotic_combinations <- ordered_antibiotics_per_episode %>%
+ordered_abx_per_episode <- abx_with_encounter_and_episode %>%
+  select(child_mrn_uf, abx = antibiotic, episode_number) %>%
+  distinct() %>%
+  group_by(child_mrn_uf, episode_number) %>%
+  arrange(abx) %>%
+  mutate(antibiotic_count = row_number()) %>%
+  pivot_wider(names_from = antibiotic_count,
+              names_glue = "{.value}_{antibiotic_count}",
+              values_from = abx) %>%
+  arrange(child_mrn_uf, episode_number)
+
+abx_combinations <- ordered_abx_per_episode %>%
   ungroup() %>%
   select(starts_with("abx")) %>%
   rowwise() %>%
   mutate(abx_combination = paste(sort(c_across()), collapse = "_")) %>%
   ungroup() %>%
-  count(abx_combination)
+  count(abx_combination) %>%
+  arrange(desc(n))
 
-abx_exposure_by_episode <- days_of_antibiotic_exposure_per_episode %>%
-  left_join(antibiotics_per_episode, by = c("child_mrn_uf", "episode_number"))
+abx_exposure_by_episode <- days_of_abx_exposure_per_episode %>%
+  left_join(unordered_abx_per_episode, by = c("child_mrn_uf", "episode_number"))
 
 
+# encounter summaries --------------------------------------------------------
 
+total_abx_dose_per_encounter <- abx_with_encounter_and_episode %>%
+  group_by(child_mrn_uf, antibiotic, encounter_number) %>%
+  summarise(total_dose_sum = sum(total_dose_character))
 
-# abx in encounter --------------------------------------------------------
-
-encounters <- read_child_encounter %>%
-  select(child_mrn_uf, admit_datetime, dischg_datetime, dischg_disposition) %>%
-  filter(!is.na(admit_datetime)) %>%
-  group_by(child_mrn_uf) %>%
-  mutate(encounter_number = row_number(),
-         admit_datetime = as_date(admit_datetime),
-         dischg_datetime = as_date(dischg_datetime)) %>%
-  group_by(child_mrn_uf, encounter_number) %>%
-  expand(encounter_date = seq(admit_datetime, dischg_datetime, by = "day"))
-
-abx_by_encounter <- encounters %>%
-  left_join(
-    antibacterial_file %>%
-      mutate(take_date = as_date(take_datetime)),
-    by = c("child_mrn_uf", "encounter_date" = "take_date")
-  )
-
-days_of_antibiotic_exposure_per_encounter <- abx_by_encounter %>%
+days_of_abx_exposure_per_encounter <- abx_with_encounter_and_episode %>%
   select(child_mrn_uf, take_datetime, pk_coverage, encounter_number) %>%
   mutate(take_datetime = as_date(take_datetime),
          pk_coverage = as_date(pk_coverage)) %>%
@@ -204,36 +216,34 @@ days_of_antibiotic_exposure_per_encounter <- abx_by_encounter %>%
     abx_exposure_days_method_2 = (last_date_method_2 - first_date_method_2) + 1
   )
 
-antibiotics_per_encounter <- abx_by_encounter %>%
+abx_per_encounter <- abx_with_encounter_and_episode %>%
   select(child_mrn_uf, abx = antibiotic, encounter_number) %>%
   distinct() %>%
   filter(!is.na(abx)) %>%
   group_by(child_mrn_uf, encounter_number) %>%
-  arrange(abx) %>%
   mutate(antibiotic_count = row_number()) %>%
   pivot_wider(names_from = antibiotic_count,
               names_glue = "{.value}_{antibiotic_count}",
               values_from = abx) %>%
   arrange(child_mrn_uf, encounter_number)
 
-abx_exposure_by_encounter <- days_of_antibiotic_exposure_per_encounter %>%
-  left_join(antibiotics_per_encounter, by = c("child_mrn_uf", "encounter_number"))
-
-output_files <- lst(antibacterial_file, abx_exposure_by_episode, abx_exposure_by_encounter)
-
-openxlsx::write.xlsx(output_files, "abx_records.xlsx")
+abx_exposure_by_encounter <- days_of_abx_exposure_per_encounter %>%
+  left_join(abx_per_encounter, by = c("child_mrn_uf", "encounter_number"))
 
 
-n_distinct(encounters$child_mrn_uf)
-n_distinct(abx_by_encounter$child_mrn_uf)
+# write outputs -----------------------------------------------------------
 
-# master df
-n_distinct(filtered_medications$child_mrn_uf)
-n_distinct(antibacterial_file$child_mrn_uf)
 
-n_distinct(days_of_antibiotic_exposure_per_episode$child_mrn_uf)
-n_distinct(antibiotics_per_episode$child_mrn_uf)
+output_files <- lst(
+  abx_with_encounter_and_episode,
+  abx_exposure_by_episode,
+  total_abx_dose_per_episode,
+  ordered_abx_per_episode,
+  abx_combinations,
+  abx_exposure_by_encounter,
+  total_abx_dose_per_encounter
+)
 
-n_distinct(days_of_antibiotic_exposure_per_encounter$child_mrn_uf)
-n_distinct(antibiotics_per_encounter$child_mrn_uf)
+openxlsx::write.xlsx(output_files, "output/abx_exposure/nicu_abx_exposure.xlsx")
+
 
