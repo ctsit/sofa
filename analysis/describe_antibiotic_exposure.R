@@ -153,6 +153,14 @@ unordered_antibiotics_per_episode <- antibacterial_file %>%
   arrange(child_mrn_uf, episode_number) %>%
   left_join(time_between_take_and_med_order, by = c("child_mrn_uf", "episode_number"))
 
+antibiotic_combinations <- ordered_antibiotics_per_episode %>%
+  ungroup() %>%
+  select(starts_with("abx")) %>%
+  rowwise() %>%
+  mutate(abx_combination = paste(sort(c_across()), collapse = "_")) %>%
+  ungroup() %>%
+  count(abx_combination)
+
 abx_exposure_by_episode <- days_of_antibiotic_exposure_per_episode %>%
   left_join(antibiotics_per_episode, by = c("child_mrn_uf", "episode_number"))
 
