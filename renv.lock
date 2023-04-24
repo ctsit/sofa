@@ -1035,6 +1035,18 @@
         "askpass"
       ]
     },
+    "openxlsx": {
+      "Package": "openxlsx",
+      "Version": "4.2.5.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c03b4c18d42da881fb8e15a085c2b9d6",
+      "Requirements": [
+        "Rcpp",
+        "stringi",
+        "zip"
+      ]
+    },
     "pander": {
       "Package": "pander",
       "Version": "0.6.5",
