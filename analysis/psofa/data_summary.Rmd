@@ -25,7 +25,7 @@ cohort <- "picu"
 
 ### Child Encounter
 ```{r child_encounter}
-child_encounter <- read_csv(here("data", cohort, "encounter.csv")) %>%
+child_encounter <- read_csv(here("input", cohort, "encounter.csv")) %>%
   clean_names()
 
 includeHTML(view(dfSummary(child_encounter, graph.col = FALSE)))
@@ -34,7 +34,7 @@ includeHTML(view(dfSummary(child_encounter, graph.col = FALSE)))
 
 ### Labs
 ```{r labs}
-labs <- read_csv(here("data", cohort, "labs.csv")) %>%
+labs <- read_csv(here("input", cohort, "labs.csv")) %>%
   clean_names() 
 
 includeHTML(view(dfSummary(labs, graph.col = FALSE)))
@@ -42,7 +42,7 @@ includeHTML(view(dfSummary(labs, graph.col = FALSE)))
 
 ### Medications
 ```{r medications}
-medications <- read_csv(here("data", cohort, "medications.csv")) %>%
+medications <- read_csv(here("input", cohort, "medications.csv")) %>%
   clean_names()
 
 includeHTML(view(dfSummary(medications, graph.col = FALSE)))
@@ -50,7 +50,7 @@ includeHTML(view(dfSummary(medications, graph.col = FALSE)))
 
 ### Flowsheets
 ```{r flowsheets}
-flowsheets <- read_csv(here("data", cohort, "flowsheets.csv")) %>%
+flowsheets <- read_csv(here("input", cohort, "flowsheets.csv")) %>%
   clean_names()
 
 includeHTML(view(dfSummary(flowsheets, graph.col = FALSE)))

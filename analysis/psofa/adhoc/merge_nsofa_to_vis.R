@@ -3,11 +3,11 @@ library(here)
 library(readxl)
 library(lubridate)
 
-cohort <- "picu"
+cohort <- "nicu"
 
 # change the input file dates to match your local file dates
-nsofa_data <- read_csv(here("data", cohort, str_c(cohort, "_nsofa_data_2022-04-13.csv")))
-psofa_data <- read_csv(here("output", cohort, str_c(cohort, "_psofa_data_2022-04-05.csv"))) %>%
+nsofa_data <- read_csv(here("output", "nsofa", cohort, str_c(cohort, "_nsofa_data_2024-01-13.csv")))
+psofa_data <- read_csv(here("output", "psofa", cohort, str_c(cohort, "_psofa_data_2024-01-13.csv"))) %>%
   select(-ends_with("_datetime"))
 
 vis_scores <- psofa_data %>%
@@ -53,5 +53,5 @@ nsofa_with_vis_summary <- nsofa_with_vis %>%
     )
   )
 
-write_csv(nsofa_with_vis, here("output", cohort, str_c(cohort, "nsofa_with_vis_", today(), ".csv")))
-write_csv(nsofa_with_vis_summary, here("output", cohort, str_c(cohort, "nsofa_with_vis_summary_", today(), ".csv")))
+write_csv(nsofa_with_vis, here("output", "nsofa", cohort, str_c(cohort, "_nsofa_with_vis_", today(), ".csv")))
+write_csv(nsofa_with_vis_summary, here("output", "nsofa", cohort, str_c(cohort, "_nsofa_with_vis_summary_", today(), ".csv")))

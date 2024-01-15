@@ -5,7 +5,7 @@ library(here)
 library(readxl)
 library(sofa)
 
-cohort <- "picu"
+cohort <- "nicu"
 
 respiratory_devices <- read_excel(here(
   "input",
@@ -121,5 +121,3 @@ nsofa_summary <- nsofa_data %>%
 
 write_csv(nsofa_data, here("output", "nsofa", cohort, str_c(cohort, "_nsofa_data_", today(), ".csv")))
 write_csv(nsofa_summary, here("output", "nsofa", cohort, str_c(cohort, "_nsofa_summary_", today(), ".csv")))
-# write_csv(vis_greater_than_zero_at_discharge, here("output", "psofa", cohort, str_c(cohort, "_vis_greater_than_zero_at_discharge_", today(), ".csv")))
-# write_csv(cv_greater_than_zero_at_discharge, here("output", "psofa", cohort, str_c(cohort, "_cv_greater_than_zero_at_discharge_", today(), ".csv")))
