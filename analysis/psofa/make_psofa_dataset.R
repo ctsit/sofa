@@ -16,8 +16,7 @@ categorized_respiratory_devices <- readxl::read_excel(here(
 
 read_child_encounter <- read_csv(here("input", cohort, "encounter.csv")) %>%
   clean_names() %>%
-  filter(!is.na(dischg_datetime)) %>%
-  filter(child_mrn_uf %in% nicu_term$child_mrn_uf)
+  filter(!is.na(dischg_datetime))
 
 child_encounter <- get_psofa_child_encounter(read_child_encounter)
 
