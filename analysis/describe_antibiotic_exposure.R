@@ -5,7 +5,7 @@ library(here)
 
 
 # identify cohort of interest. e.g picu/pcicu/nicu
-cohort <- "pcicu"
+cohort <- "nicu"
 
 read_abxs <- read_csv(here("input", "abxs.csv"))
 
@@ -261,7 +261,8 @@ for (row in 1:nrow(transformed_abxs)) {
       cohort,
       "_",
       abxs$drug_type,
-      "_abx_exposure.xlsx"
+      "_abx_exposure_",
+      today(), ".xlsx"
     )
   )
 }
